@@ -64,8 +64,8 @@ function NavSection({ label, items }: { label: string; items: typeof mainNav }) 
                 <NavLink
                   to={item.url}
                   end={item.url === "/"}
-                  className="flex items-center gap-3 px-3 py-2 rounded-md text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors text-sm"
-                  activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all text-sm"
+                  activeClassName="bg-sidebar-accent text-sidebar-primary font-medium shadow-sm"
                 >
                   <item.icon className="h-4 w-4 shrink-0" />
                   <span>{item.title}</span>
@@ -81,10 +81,10 @@ function NavSection({ label, items }: { label: string; items: typeof mainNav }) 
 
 export function AppSidebar() {
   return (
-    <Sidebar className="border-r-0">
+    <Sidebar className="border-r-0 glass-sidebar">
       <SidebarHeader className="px-5 py-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg bg-sidebar-primary flex items-center justify-center">
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sidebar-primary to-primary flex items-center justify-center shadow-lg shadow-primary/20">
             <Shield className="h-5 w-5 text-sidebar-primary-foreground" />
           </div>
           <div>
