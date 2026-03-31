@@ -10,15 +10,15 @@ export function AppLayout() {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 border-b bg-card flex items-center justify-between px-4 shrink-0">
+          <header className="h-14 glass-strong border-b border-border flex items-center justify-between px-4 shrink-0 sticky top-0 z-10">
             <div className="flex items-center gap-2">
               <SidebarTrigger />
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="text-muted-foreground">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
                 <Bell className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="text-muted-foreground">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
                 <User className="h-4 w-4" />
               </Button>
             </div>
