@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Award, BadgeCheck, ClipboardCheck, AlertTriangle, TrendingUp, Users, Calendar, ShieldCheck } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -6,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="page-header">
@@ -14,10 +17,18 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Active Certificates" value="5,712" icon={BadgeCheck} trend="+12% จากเดือนก่อน" trendUp />
-        <StatCard title="Pending Approval" value={mockApprovals.length} icon={ClipboardCheck} />
-        <StatCard title="Expiring Soon (30d)" value="128" icon={AlertTriangle} trend="ต้องดำเนินการ" />
-        <StatCard title="Verify API Calls (Today)" value="1,842" icon={ShieldCheck} trend="+24%" trendUp />
+        <div className="cursor-pointer" onClick={() => navigate("/certificates")}>
+          <StatCard title="Active Certificates" value="5,712" icon={BadgeCheck} trend="+12% จากเดือนก่อน" trendUp />
+        </div>
+        <div className="cursor-pointer" onClick={() => navigate("/approvals")}>
+          <StatCard title="Pending Approval" value={mockApprovals.length} icon={ClipboardCheck} />
+        </div>
+        <div className="cursor-pointer" onClick={() => navigate("/certificates")}>
+          <StatCard title="Expiring Soon (30d)" value="128" icon={AlertTriangle} trend="ต้องดำเนินการ" />
+        </div>
+        <div className="cursor-pointer" onClick={() => navigate("/logs")}>
+          <StatCard title="Verify API Calls (Today)" value="1,842" icon={ShieldCheck} trend="+24%" trendUp />
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -25,13 +36,13 @@ export default function Dashboard() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-semibold">Pending Approvals</CardTitle>
-              <Button variant="ghost" size="sm" className="text-xs text-primary">View All</Button>
+              <Button variant="ghost" size="sm" className="text-xs text-primary" onClick={() => navigate("/approvals")}>View All</Button>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {mockApprovals.slice(0, 4).map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => navigate("/approvals")}>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{item.holder}</p>
                     <p className="text-xs text-muted-foreground">{item.program} · {item.certNo}</p>
@@ -50,13 +61,13 @@ export default function Dashboard() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-semibold">Recent Certificates</CardTitle>
-              <Button variant="ghost" size="sm" className="text-xs text-primary">View All</Button>
+              <Button variant="ghost" size="sm" className="text-xs text-primary" onClick={() => navigate("/certificates")}>View All</Button>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {mockCertificates.slice(0, 4).map((cert) => (
-                <div key={cert.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div key={cert.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => navigate("/certificates")}>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{cert.holder}</p>
                     <p className="text-xs text-muted-foreground">{cert.certNo}</p>
@@ -70,9 +81,15 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <StatCard title="Programs" value={4} icon={Award} />
-        <StatCard title="Registered Users" value="8,234" icon={Users} />
-        <StatCard title="Upcoming Events" value={3} icon={Calendar} />
+        <div className="cursor-pointer" onClick={() => navigate("/programs")}>
+          <StatCard title="Programs" value={4} icon={Award} />
+        </div>
+        <div className="cursor-pointer" onClick={() => navigate("/users")}>
+          <StatCard title="Registered Users" value="8,234" icon={Users} />
+        </div>
+        <div className="cursor-pointer" onClick={() => navigate("/events")}>
+          <StatCard title="Upcoming Events" value={3} icon={Calendar} />
+        </div>
       </div>
     </div>
   );

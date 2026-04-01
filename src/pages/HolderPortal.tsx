@@ -1,8 +1,13 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Award, QrCode, Download, RefreshCw, Bell, Shield } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 const myCerts = [
   { certNo: "TMPSA-2026-000123", program: "EMT-Paramedic Certification", status: "active" as const, issuedAt: "2025-06-15", expiresAt: "2027-06-15", issuer: "TMPSA" },
@@ -16,6 +21,9 @@ const notifications = [
 ];
 
 export default function HolderPortal() {
+  const [qrCert, setQrCert] = useState<string | null>(null);
+  const [renewCert, setRenewCert] = useState<string | null>(null);
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
@@ -56,10 +64,10 @@ export default function HolderPortal() {
                     <span>Expires: {cert.expiresAt}</span>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm"><QrCode className="h-4 w-4 mr-1.5" />QR Code</Button>
-                    <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1.5" />Download</Button>
+                    <Button variant="outline" size="sm" onClick={() => setQrCert(cert.certNo)}><QrCode className="h-4 w-4 mr-1.5" />QR Code</Button>
+                    <Button variant="outline" size="sm" onClick={() => toast.success("Certificate PDF downloaded")}><Download className="h-4 w-4 mr-1.5" />Download</Button>
                     {cert.status === "expired" && (
-                      <Button size="sm"><RefreshCw className="h-4 w-4 mr-1.5" />ขอต่ออายุ</Button>
+                      <Button size="sm" onClick={() => setRenewCert(cert.certNo)}><RefreshCw className="h-4 w-4 mr-1.5" />ขอต่ออายุ</Button>
                     )}
                   </div>
                 </CardContent>
@@ -85,6 +93,41 @@ export default function HolderPortal() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* QR Dialog */}
+      <Dialog open={!!qrCert} onOpenChange={() => setQrCert(null)}>
+        <DialogContent className="sm:max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle>QR Code</DialogTitle>
+            <DialogDescription>{qrCert}</DialogDescription>
+          </DialogHeader>
+          <div className="mx-auto my-4 h-48 w-48 border-2 border-dashed border-primary/30 rounded-xl flex flex-col items-center justify-center bg-muted/30">
+            <QrCode className="h-20 w-20 text-primary/60" />
+            <p className="text-[10px] text-muted-foreground mt-2 font-mono">/verify/{qrCert}</p>
+          </div>
+          <p className="text-xs text-muted-foreground">แสดง QR นี้เพื่อยืนยันใบรับรอง</p>
+        </DialogContent>
+      </Dialog>
+
+      {/* Renewal Dialog */}
+      <Dialog open={!!renewCert} onOpenChange={() => setRenewCert(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>ขอต่ออายุใบรับรอง</DialogTitle>
+            <DialogDescription>{renewCert}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label>เหตุผล / หมายเหตุ</Label>
+            <Textarea placeholder="ระบุเหตุผลในการต่ออายุ..." />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenewCert(null)}>ยกเลิก</Button>
+            <Button onClick={() => { toast.success("ส่งคำขอต่ออายุเรียบร้อย", { description: "รอการอนุมัติจากผู้มีอำนาจ" }); setRenewCert(null); }}>
+              ส่งคำขอ
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
