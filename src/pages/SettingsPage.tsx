@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
   return (
@@ -44,7 +45,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Button>Save Settings</Button>
+      <Button onClick={() => toast.success("บันทึกการตั้งค่าสำเร็จ", { description: "การเปลี่ยนแปลงมีผลทันที" })}>Save Settings</Button>
     </div>
   );
 }

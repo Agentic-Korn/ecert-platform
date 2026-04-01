@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Users, Calendar, BookOpen } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 
 export default function Training() {
   return (
@@ -13,12 +14,12 @@ export default function Training() {
           <h1 className="page-title">Training Courses</h1>
           <p className="page-description">จัดการคอร์สอบรมและรอบการเรียน</p>
         </div>
-        <Button><Plus className="h-4 w-4 mr-2" />สร้าง Course</Button>
+        <Button onClick={() => toast.info("สร้าง Course ใหม่ (Demo)")}><Plus className="h-4 w-4 mr-2" />สร้าง Course</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {mockCourses.map((course) => (
-          <Card key={course.id} className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card key={course.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => toast.info(`เปิดรายละเอียด: ${course.name}`)}>
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
