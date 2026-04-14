@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Award, Mail, MessageCircle } from "lucide-react";
@@ -30,31 +31,32 @@ type MsgT = typeof messageTemplates[0];
 export default function Templates() {
   const [selectedBadge, setSelectedBadge] = useState<BadgeT | null>(null);
   const [selectedMsg, setSelectedMsg] = useState<MsgT | null>(null);
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="page-header flex items-start justify-between">
         <div>
-          <h1 className="page-title">Templates</h1>
-          <p className="page-description">Badge และ Message templates</p>
+          <h1 className="page-title">{t("templates.title")}</h1>
+          <p className="page-description">{t("templates.subtitle")}</p>
         </div>
-        <Button onClick={() => toast.info("สร้าง Template ใหม่ (Demo)")}><Plus className="h-4 w-4 mr-2" />สร้าง Template</Button>
+        <Button onClick={() => toast.info(t("templates.toastCreate"))}><Plus className="h-4 w-4 mr-2" />{t("templates.createTemplate")}</Button>
       </div>
 
       <Tabs defaultValue="badge">
         <TabsList>
-          <TabsTrigger value="badge"><Award className="h-4 w-4 mr-1.5" />Badge Templates</TabsTrigger>
-          <TabsTrigger value="message"><Mail className="h-4 w-4 mr-1.5" />Message Templates</TabsTrigger>
+          <TabsTrigger value="badge"><Award className="h-4 w-4 mr-1.5" />{t("templates.badgeTemplates")}</TabsTrigger>
+          <TabsTrigger value="message"><Mail className="h-4 w-4 mr-1.5" />{t("templates.messageTemplates")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="badge" className="mt-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {badgeTemplates.map((t) => (
-              <Card key={t.id} className="hover:shadow-md transition-shadow cursor-pointer text-center" onClick={() => setSelectedBadge(t)}>
+            {badgeTemplates.map((t_item) => (
+              <Card key={t_item.id} className="hover:shadow-md transition-shadow cursor-pointer text-center" onClick={() => setSelectedBadge(t_item)}>
                 <CardContent className="p-6">
-                  <div className="text-5xl mb-3">{t.preview}</div>
-                  <h3 className="font-semibold text-sm">{t.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">{t.program}</p>
+                  <div className="text-5xl mb-3">{t_item.preview}</div>
+                  <h3 className="font-semibold text-sm">{t_item.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">{t_item.program}</p>
                 </CardContent>
               </Card>
             ))}
@@ -63,19 +65,19 @@ export default function Templates() {
 
         <TabsContent value="message" className="mt-4">
           <div className="space-y-3">
-            {messageTemplates.map((t) => (
-              <Card key={t.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedMsg(t)}>
+            {messageTemplates.map((t_item) => (
+              <Card key={t_item.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedMsg(t_item)}>
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
                       <MessageCircle className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-sm">{t.name}</h3>
-                      <p className="text-xs text-muted-foreground">{t.channel} · {t.variables} variables</p>
+                      <h3 className="font-semibold text-sm">{t_item.name}</h3>
+                      <p className="text-xs text-muted-foreground">{t_item.channel} · {t_item.variables} variables</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setSelectedMsg(t); }}>Edit</Button>
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setSelectedMsg(t_item); }}>{t("common.edit")}</Button>
                 </CardContent>
               </Card>
             ))}
@@ -87,29 +89,29 @@ export default function Templates() {
       <Dialog open={!!selectedBadge} onOpenChange={() => setSelectedBadge(null)}>
         <DialogContent className="sm:max-w-md text-center">
           <DialogHeader>
-            <DialogTitle>Badge Template</DialogTitle>
+            <DialogTitle>{t("templates.badgeTemplateTitle")}</DialogTitle>
             <DialogDescription>{selectedBadge?.program}</DialogDescription>
           </DialogHeader>
           {selectedBadge && (
             <div className="space-y-4">
               <div className="text-7xl">{selectedBadge.preview}</div>
               <div className="space-y-2 text-left">
-                <Label>Template Name</Label>
+                <Label>{t("templates.templateName")}</Label>
                 <Input defaultValue={selectedBadge.name} />
               </div>
               <div className="space-y-2 text-left">
-                <Label>Linked Program</Label>
+                <Label>{t("templates.linkedProgram")}</Label>
                 <Input defaultValue={selectedBadge.program} />
               </div>
               <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                <p className="font-medium text-foreground mb-1">Badge Preview</p>
-                <p className="text-xs">แสดงบน Holder Portal, QR Card, และ PDF Certificate</p>
+                <p className="font-medium text-foreground mb-1">{t("templates.badgePreview")}</p>
+                <p className="text-xs">{t("templates.badgeDisplayDesc")}</p>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedBadge(null)}>ปิด</Button>
-            <Button onClick={() => { toast.success("บันทึก Badge Template สำเร็จ"); setSelectedBadge(null); }}>บันทึก</Button>
+            <Button variant="outline" onClick={() => setSelectedBadge(null)}>{t("common.close")}</Button>
+            <Button onClick={() => { toast.success(t("templates.toastBadgeSaved")); setSelectedBadge(null); }}>{t("common.save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -118,29 +120,29 @@ export default function Templates() {
       <Dialog open={!!selectedMsg} onOpenChange={() => setSelectedMsg(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Message Template</DialogTitle>
+            <DialogTitle>{t("templates.messageTemplateTitle")}</DialogTitle>
             <DialogDescription>{selectedMsg?.channel} · {selectedMsg?.variables} variables</DialogDescription>
           </DialogHeader>
           {selectedMsg && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Template Name</Label>
+                <Label>{t("templates.templateName")}</Label>
                 <Input defaultValue={selectedMsg.name} />
               </div>
               <div className="space-y-2">
-                <Label>Channel</Label>
+                <Label>{t("templates.channelLabel")}</Label>
                 <Input defaultValue={selectedMsg.channel} />
               </div>
               <div className="space-y-2">
-                <Label>Message Body</Label>
+                <Label>{t("templates.messageBody")}</Label>
                 <Textarea defaultValue={selectedMsg.body} rows={6} className="font-mono text-xs" />
               </div>
-              <p className="text-xs text-muted-foreground">ใช้ {"{{variable}}"} สำหรับตัวแปร เช่น {"{{holder_name}}"}, {"{{cert_no}}"}</p>
+              <p className="text-xs text-muted-foreground">{t("templates.variableHint")}</p>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedMsg(null)}>ปิด</Button>
-            <Button onClick={() => { toast.success("บันทึก Message Template สำเร็จ"); setSelectedMsg(null); }}>บันทึก</Button>
+            <Button variant="outline" onClick={() => setSelectedMsg(null)}>{t("common.close")}</Button>
+            <Button onClick={() => { toast.success(t("templates.toastMessageSaved")); setSelectedMsg(null); }}>{t("common.save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

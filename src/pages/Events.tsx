@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { mockEvents } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,15 +13,16 @@ type EventItem = typeof mockEvents[0];
 
 export default function Events() {
   const [selected, setSelected] = useState<EventItem | null>(null);
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="page-header flex items-start justify-between">
         <div>
-          <h1 className="page-title">Events</h1>
-          <p className="page-description">จัดการงานอีเวนต์และส่วนลดตามใบรับรอง</p>
+          <h1 className="page-title">{t("events.title")}</h1>
+          <p className="page-description">{t("events.subtitle")}</p>
         </div>
-        <Button onClick={() => toast.info("สร้าง Event ใหม่ (Demo)")}><Plus className="h-4 w-4 mr-2" />สร้าง Event</Button>
+        <Button onClick={() => toast.info(t("events.toastCreate"))}><Plus className="h-4 w-4 mr-2" />{t("events.createEvent")}</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -42,19 +44,19 @@ export default function Events() {
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Event Details</DialogTitle>
+            <DialogTitle>{t("events.details")}</DialogTitle>
             <DialogDescription>{selected?.organizer}</DialogDescription>
           </DialogHeader>
           {selected && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Event Name</Label><Input defaultValue={selected.name} /></div>
-                <div className="space-y-2"><Label>Date</Label><Input defaultValue={selected.date} /></div>
-                <div className="space-y-2"><Label>Location</Label><Input defaultValue={selected.location} /></div>
-                <div className="space-y-2"><Label>Organizer</Label><Input defaultValue={selected.organizer} /></div>
+                <div className="space-y-2"><Label>{t("events.eventName")}</Label><Input defaultValue={selected.name} /></div>
+                <div className="space-y-2"><Label>{t("events.date")}</Label><Input defaultValue={selected.date} /></div>
+                <div className="space-y-2"><Label>{t("events.location")}</Label><Input defaultValue={selected.location} /></div>
+                <div className="space-y-2"><Label>{t("events.organizer")}</Label><Input defaultValue={selected.organizer} /></div>
               </div>
               <div>
-                <p className="text-sm font-semibold mb-2">Discount Rules ({selected.discountRules})</p>
+                <p className="text-sm font-semibold mb-2">{t("events.discountRulesTitle", { count: selected.discountRules })}</p>
                 <div className="space-y-2">
                   <div className="rounded-lg bg-muted/50 p-3 text-sm">
                     <p className="font-medium">EMT-P Certified → 30% off</p>
@@ -69,13 +71,13 @@ export default function Events() {
                 </div>
               </div>
               <div className="text-sm text-muted-foreground">
-                Registered Attendees: <span className="font-bold text-foreground">{selected.attendees}</span>
+                {t("events.registeredAttendees")} <span className="font-bold text-foreground">{selected.attendees}</span>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSelected(null)}>ปิด</Button>
-            <Button onClick={() => { toast.success("บันทึก Event สำเร็จ"); setSelected(null); }}>บันทึก</Button>
+            <Button variant="outline" onClick={() => setSelected(null)}>{t("common.close")}</Button>
+            <Button onClick={() => { toast.success(t("events.toastSaved")); setSelected(null); }}>{t("common.save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

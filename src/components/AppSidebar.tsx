@@ -2,7 +2,6 @@ import {
   LayoutDashboard,
   Award,
   ClipboardCheck,
-  Search,
   GraduationCap,
   Calendar,
   Users,
@@ -12,7 +11,9 @@ import {
   BadgeCheck,
   MessageSquare,
   Settings,
+  BarChart3,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -26,31 +27,39 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 
-const mainNav = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Programs", url: "/programs", icon: Award },
-  { title: "Certificates", url: "/certificates", icon: BadgeCheck },
-  { title: "Approvals", url: "/approvals", icon: ClipboardCheck },
+interface NavItem {
+  titleKey: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const mainNav: NavItem[] = [
+  { titleKey: "nav.dashboard", url: "/", icon: LayoutDashboard },
+  { titleKey: "nav.programs", url: "/programs", icon: Award },
+  { titleKey: "nav.certificates", url: "/certificates", icon: BadgeCheck },
+  { titleKey: "nav.approvals", url: "/approvals", icon: ClipboardCheck },
+  { titleKey: "nav.reports", url: "/reports", icon: BarChart3 },
 ];
 
-const trainingNav = [
-  { title: "Courses", url: "/training", icon: GraduationCap },
-  { title: "Events", url: "/events", icon: Calendar },
+const trainingNav: NavItem[] = [
+  { titleKey: "nav.courses", url: "/training", icon: GraduationCap },
+  { titleKey: "nav.events", url: "/events", icon: Calendar },
 ];
 
-const commNav = [
-  { title: "Messages", url: "/messages", icon: MessageSquare },
-  { title: "Templates", url: "/templates", icon: FileText },
+const commNav: NavItem[] = [
+  { titleKey: "nav.messages", url: "/messages", icon: MessageSquare },
+  { titleKey: "nav.templates", url: "/templates", icon: FileText },
 ];
 
-const adminNav = [
-  { title: "Users & Roles", url: "/users", icon: Users },
-  { title: "API Clients", url: "/api-clients", icon: Key },
-  { title: "Audit Logs", url: "/logs", icon: Shield },
-  { title: "Settings", url: "/settings", icon: Settings },
+const adminNav: NavItem[] = [
+  { titleKey: "nav.usersRoles", url: "/users", icon: Users },
+  { titleKey: "nav.apiClients", url: "/api-clients", icon: Key },
+  { titleKey: "nav.auditLogs", url: "/logs", icon: Shield },
+  { titleKey: "nav.settings", url: "/settings", icon: Settings },
 ];
 
-function NavSection({ label, items }: { label: string; items: typeof mainNav }) {
+function NavSection({ label, items }: { label: string; items: NavItem[] }) {
+  const { t } = useTranslation();
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="text-sidebar-muted text-[11px] uppercase tracking-wider font-semibold">
@@ -68,7 +77,7 @@ function NavSection({ label, items }: { label: string; items: typeof mainNav }) 
                   activeClassName="bg-sidebar-accent text-sidebar-primary font-medium shadow-sm"
                 >
                   <item.icon className="h-4 w-4 shrink-0" />
-                  <span>{item.title}</span>
+                  <span>{t(item.titleKey)}</span>
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -80,6 +89,7 @@ function NavSection({ label, items }: { label: string; items: typeof mainNav }) 
 }
 
 export function AppSidebar() {
+  const { t } = useTranslation();
   return (
     <Sidebar className="border-r-0 glass-sidebar">
       <SidebarHeader className="px-5 py-5 border-b border-sidebar-border">
@@ -88,16 +98,16 @@ export function AppSidebar() {
             <Shield className="h-5 w-5 text-sidebar-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-sidebar-accent-foreground tracking-tight">eCert</h1>
-            <p className="text-[11px] text-sidebar-muted">Certification Platform</p>
+            <h1 className="text-base font-bold text-sidebar-accent-foreground tracking-tight">{t("app.name")}</h1>
+            <p className="text-[11px] text-sidebar-muted">{t("app.tagline")}</p>
           </div>
         </div>
       </SidebarHeader>
       <SidebarContent className="px-2 py-3">
-        <NavSection label="Overview" items={mainNav} />
-        <NavSection label="Training & Events" items={trainingNav} />
-        <NavSection label="Communication" items={commNav} />
-        <NavSection label="Administration" items={adminNav} />
+        <NavSection label={t("nav.overview")} items={mainNav} />
+        <NavSection label={t("nav.trainingEvents")} items={trainingNav} />
+        <NavSection label={t("nav.communication")} items={commNav} />
+        <NavSection label={t("nav.administration")} items={adminNav} />
       </SidebarContent>
     </Sidebar>
   );
