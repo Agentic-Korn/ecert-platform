@@ -17,6 +17,8 @@ import {
   mockUsers,
   mockLogs,
   mockPrograms,
+  mockEnrollmentsSeed,
+  mockVerifyLogsSeed,
 } from "./mockData";
 
 // --- Utility ---
@@ -119,10 +121,18 @@ export const initialState: AppState = {
   certificates: seedCertificates,
   approvals: seedApprovals,
   courses: seedCourses,
-  enrollments: [],
+  enrollments: mockEnrollmentsSeed.map((e) => ({
+    id: e.id,
+    courseId: e.courseId,
+    holderId: e.id,
+    holderName: e.holderName,
+    holderEmail: e.holderEmail,
+    enrolledAt: e.enrolledAt,
+    attended: e.attended,
+  })),
   users: seedUsers,
   currentUser: null,
-  verifyLogs: [],
+  verifyLogs: mockVerifyLogsSeed,
   auditLog: seedAuditLog,
 };
 
