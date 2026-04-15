@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { mockApiClients } from "@/lib/mockData";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -5,14 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Key, Copy, BarChart3 } from "lucide-react";
 
 export default function ApiClients() {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="page-header flex items-start justify-between">
         <div>
-          <h1 className="page-title">API Clients & Keys</h1>
-          <p className="page-description">จัดการ API keys สำหรับ Verify API</p>
+          <h1 className="page-title">{t("apiClients.title")}</h1>
+          <p className="page-description">{t("apiClients.subtitle")}</p>
         </div>
-        <Button><Plus className="h-4 w-4 mr-2" />สร้าง API Client</Button>
+        <Button><Plus className="h-4 w-4 mr-2" />{t("apiClients.createClient")}</Button>
       </div>
 
       <div className="space-y-4">
@@ -34,13 +37,13 @@ export default function ApiClients() {
                       <Button variant="ghost" size="icon" className="h-6 w-6"><Copy className="h-3 w-3" /></Button>
                     </div>
                     <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-                      <span>Created: {client.created}</span>
-                      <span>Last used: {client.lastUsed}</span>
-                      <span className="flex items-center gap-1"><BarChart3 className="h-3 w-3" />{client.requests.toLocaleString()} requests</span>
+                      <span>{t("apiClients.created")} {client.created}</span>
+                      <span>{t("apiClients.lastUsed")} {client.lastUsed}</span>
+                      <span className="flex items-center gap-1"><BarChart3 className="h-3 w-3" />{t("apiClients.requests", { count: client.requests.toLocaleString() })}</span>
                     </div>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">Manage</Button>
+                <Button variant="outline" size="sm">{t("common.manage")}</Button>
               </div>
             </CardContent>
           </Card>
@@ -49,7 +52,7 @@ export default function ApiClients() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">API Documentation</CardTitle>
+          <CardTitle className="text-base">{t("apiClients.apiDocumentation")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="bg-muted rounded-lg p-4 font-mono text-sm space-y-2">

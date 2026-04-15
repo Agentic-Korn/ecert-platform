@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { mockMessages } from "@/lib/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -5,6 +6,7 @@ import { StatCard } from "@/components/StatCard";
 import { Send, Eye, MousePointerClick, MessageSquare } from "lucide-react";
 
 export default function Messages() {
+  const { t } = useTranslation();
   const totalSent = mockMessages.reduce((s, m) => s + m.sent, 0);
   const totalOpened = mockMessages.reduce((s, m) => s + m.opened, 0);
   const totalClicked = mockMessages.reduce((s, m) => s + m.clicked, 0);
@@ -12,30 +14,30 @@ export default function Messages() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="page-header">
-        <h1 className="page-title">Messages</h1>
-        <p className="page-description">สถิติการส่งข้อความ LINE/Email</p>
+        <h1 className="page-title">{t("messages.title")}</h1>
+        <p className="page-description">{t("messages.subtitle")}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <StatCard title="Total Sent" value={totalSent.toLocaleString()} icon={Send} />
-        <StatCard title="Opened" value={`${Math.round((totalOpened / totalSent) * 100)}%`} icon={Eye} />
-        <StatCard title="Clicked" value={`${Math.round((totalClicked / totalSent) * 100)}%`} icon={MousePointerClick} />
+        <StatCard title={t("messages.totalSent")} value={totalSent.toLocaleString()} icon={Send} />
+        <StatCard title={t("messages.opened")} value={`${Math.round((totalOpened / totalSent) * 100)}%`} icon={Eye} />
+        <StatCard title={t("messages.clicked")} value={`${Math.round((totalClicked / totalSent) * 100)}%`} icon={MousePointerClick} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Message Activity</CardTitle>
+          <CardTitle className="text-base">{t("messages.messageActivity")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Template</TableHead>
-                <TableHead>Channel</TableHead>
-                <TableHead className="text-right">Sent</TableHead>
-                <TableHead className="text-right">Opened</TableHead>
-                <TableHead className="text-right">Clicked</TableHead>
-                <TableHead>Last Sent</TableHead>
+                <TableHead>{t("messages.template")}</TableHead>
+                <TableHead>{t("messages.channel")}</TableHead>
+                <TableHead className="text-right">{t("messages.sent")}</TableHead>
+                <TableHead className="text-right">{t("messages.opened")}</TableHead>
+                <TableHead className="text-right">{t("messages.clicked")}</TableHead>
+                <TableHead>{t("messages.lastSent")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -1,33 +1,50 @@
 import { useNavigate } from "react-router-dom";
-import { Award, BadgeCheck, ClipboardCheck, AlertTriangle, TrendingUp, Users, Calendar, ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Award, BadgeCheck, ClipboardCheck, AlertTriangle, Users, Calendar, ShieldCheck } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { mockApprovals, mockCertificates } from "@/lib/mockData";
+import { useAppStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { state } = useAppStore();
+
+  const activeCerts = state.certificates.filter(c => c.status === "active").length;
+  const pendingApprovals = state.approvals.filter(a => a.status === "pending");
+  const expiringSoon = state.certificates.filter(c => {
+    if (c.status !== "active" || !c.expiresAt) return false;
+    const diff = (new Date(c.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+    return diff > 0 && diff <= 30;
+  }).length;
+  const todayVerifies = state.verifyLogs.filter(l => {
+    const today = new Date().toISOString().split("T")[0];
+    return l.queriedAt.startsWith(today);
+  }).length;
+
+  const recentCerts = [...state.certificates].reverse().slice(0, 4);
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="page-header">
-        <h1 className="page-title">Dashboard</h1>
-        <p className="page-description">ภาพรวมระบบใบรับรองดิจิทัล eCert</p>
+        <h1 className="page-title">{t("dashboard.title")}</h1>
+        <p className="page-description">{t("dashboard.subtitle")}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="cursor-pointer" onClick={() => navigate("/certificates")}>
-          <StatCard title="Active Certificates" value="5,712" icon={BadgeCheck} trend="+12% จากเดือนก่อน" trendUp />
+          <StatCard title={t("dashboard.activeCertificates")} value={activeCerts} icon={BadgeCheck} trend={`+12% ${t("dashboard.fromLastMonth")}`} trendUp />
         </div>
         <div className="cursor-pointer" onClick={() => navigate("/approvals")}>
-          <StatCard title="Pending Approval" value={mockApprovals.length} icon={ClipboardCheck} />
+          <StatCard title={t("dashboard.pendingApproval")} value={pendingApprovals.length} icon={ClipboardCheck} />
         </div>
         <div className="cursor-pointer" onClick={() => navigate("/certificates")}>
-          <StatCard title="Expiring Soon (30d)" value="128" icon={AlertTriangle} trend="ต้องดำเนินการ" />
+          <StatCard title={t("dashboard.expiringSoon")} value={expiringSoon} icon={AlertTriangle} trend={expiringSoon > 0 ? t("dashboard.requiresAction") : undefined} />
         </div>
         <div className="cursor-pointer" onClick={() => navigate("/logs")}>
-          <StatCard title="Verify API Calls (Today)" value="1,842" icon={ShieldCheck} trend="+24%" trendUp />
+          <StatCard title={t("dashboard.verifyApiCalls")} value={todayVerifies} icon={ShieldCheck} />
         </div>
       </div>
 
@@ -35,17 +52,17 @@ export default function Dashboard() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold">Pending Approvals</CardTitle>
-              <Button variant="ghost" size="sm" className="text-xs text-primary" onClick={() => navigate("/approvals")}>View All</Button>
+              <CardTitle className="text-base font-semibold">{t("dashboard.pendingApprovals")}</CardTitle>
+              <Button variant="ghost" size="sm" className="text-xs text-primary" onClick={() => navigate("/approvals")}>{t("common.viewAll")}</Button>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {mockApprovals.slice(0, 4).map((item) => (
+              {pendingApprovals.slice(0, 4).map((item) => (
                 <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => navigate("/approvals")}>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{item.holder}</p>
-                    <p className="text-xs text-muted-foreground">{item.program} · {item.certNo}</p>
+                    <p className="font-medium text-sm truncate">{item.holderName}</p>
+                    <p className="text-xs text-muted-foreground">{item.programName} · {item.certNo}</p>
                   </div>
                   <div className="flex items-center gap-2 ml-3">
                     <StatusBadge status="pending" />
@@ -53,6 +70,9 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))}
+              {pendingApprovals.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">{t("approvals.noItems")}</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -60,16 +80,16 @@ export default function Dashboard() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold">Recent Certificates</CardTitle>
-              <Button variant="ghost" size="sm" className="text-xs text-primary" onClick={() => navigate("/certificates")}>View All</Button>
+              <CardTitle className="text-base font-semibold">{t("dashboard.recentCertificates")}</CardTitle>
+              <Button variant="ghost" size="sm" className="text-xs text-primary" onClick={() => navigate("/certificates")}>{t("common.viewAll")}</Button>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {mockCertificates.slice(0, 4).map((cert) => (
+              {recentCerts.map((cert) => (
                 <div key={cert.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted/80 transition-colors" onClick={() => navigate("/certificates")}>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{cert.holder}</p>
+                    <p className="font-medium text-sm truncate">{cert.holderName}</p>
                     <p className="text-xs text-muted-foreground">{cert.certNo}</p>
                   </div>
                   <StatusBadge status={cert.status} />
@@ -82,13 +102,13 @@ export default function Dashboard() {
 
       <div className="grid gap-4 md:grid-cols-3">
         <div className="cursor-pointer" onClick={() => navigate("/programs")}>
-          <StatCard title="Programs" value={4} icon={Award} />
+          <StatCard title={t("dashboard.programs")} value={state.programs.length} icon={Award} />
         </div>
         <div className="cursor-pointer" onClick={() => navigate("/users")}>
-          <StatCard title="Registered Users" value="8,234" icon={Users} />
+          <StatCard title={t("dashboard.registeredUsers")} value={state.users.length} icon={Users} />
         </div>
         <div className="cursor-pointer" onClick={() => navigate("/events")}>
-          <StatCard title="Upcoming Events" value={3} icon={Calendar} />
+          <StatCard title={t("dashboard.upcomingEvents")} value={3} icon={Calendar} />
         </div>
       </div>
     </div>

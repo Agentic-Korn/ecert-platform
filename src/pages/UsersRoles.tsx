@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { mockUsers } from "@/lib/mockData";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -14,30 +15,32 @@ const roleColors: Record<string, string> = {
 };
 
 export default function UsersRoles() {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="page-header flex items-start justify-between">
         <div>
-          <h1 className="page-title">Users & Roles</h1>
-          <p className="page-description">จัดการผู้ใช้งานและสิทธิ์</p>
+          <h1 className="page-title">{t("users.title")}</h1>
+          <p className="page-description">{t("users.subtitle")}</p>
         </div>
-        <Button><Plus className="h-4 w-4 mr-2" />เพิ่มผู้ใช้</Button>
+        <Button><Plus className="h-4 w-4 mr-2" />{t("users.addUser")}</Button>
       </div>
 
       <div className="relative max-w-sm">
         <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="ค้นหาผู้ใช้..." className="pl-9" />
+        <Input placeholder={t("users.searchPlaceholder")} className="pl-9" />
       </div>
 
       <div className="bg-card rounded-xl border overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Last Login</TableHead>
+              <TableHead>{t("users.name")}</TableHead>
+              <TableHead>{t("users.email")}</TableHead>
+              <TableHead>{t("users.role")}</TableHead>
+              <TableHead>{t("users.status")}</TableHead>
+              <TableHead>{t("users.lastLogin")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

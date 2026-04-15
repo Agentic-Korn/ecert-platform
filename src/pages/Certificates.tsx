@@ -1,60 +1,87 @@
 import { useState } from "react";
-import { mockCertificates, mockPrograms } from "@/lib/mockData";
+import { useTranslation } from "react-i18next";
+import { useAppStore } from "@/lib/store";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Download, Search, QrCode, Shield, Clock, RotateCcw, Ban } from "lucide-react";
+import { Plus, Download, Search, QrCode as QrCodeIcon, Shield, Clock, RotateCcw, Ban } from "lucide-react";
+import { QRCodeDisplay } from "@/components/QRCodeDisplay";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-
-type Cert = typeof mockCertificates[0];
-
-const timeline = [
-  { label: "Draft Created", date: "2025-06-01", done: true },
-  { label: "Submitted for Approval", date: "2025-06-10", done: true },
-  { label: "Approved", date: "2025-06-14", done: true },
-  { label: "Certificate Issued", date: "2025-06-15", done: true },
-];
+import type { Certificate } from "@/lib/types";
 
 export default function Certificates() {
-  const [selectedCert, setSelectedCert] = useState<Cert | null>(null);
+  const { t } = useTranslation();
+  const { state, dispatch } = useAppStore();
+
+  const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
   const [showQR, setShowQR] = useState(false);
   const [showIssue, setShowIssue] = useState(false);
   const [issueStep, setIssueStep] = useState(1);
   const [search, setSearch] = useState("");
 
-  const filtered = mockCertificates.filter(c =>
-    !search || c.certNo.toLowerCase().includes(search.toLowerCase()) || c.holder.toLowerCase().includes(search.toLowerCase())
+  // Issue form state
+  const [issueProgramId, setIssueProgramId] = useState("");
+  const [issueFirstName, setIssueFirstName] = useState("");
+  const [issueLastName, setIssueLastName] = useState("");
+  const [issueEmail, setIssueEmail] = useState("");
+
+  const filtered = state.certificates.filter(c =>
+    !search || c.certNo.toLowerCase().includes(search.toLowerCase()) || c.holderName.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleIssueSubmit = () => {
-    const newCertNo = `TMPSA-2026-${String(Math.floor(Math.random() * 999999)).padStart(6, "0")}`;
-    toast.success("ออกใบรับรองสำเร็จ!", { description: `Certificate No: ${newCertNo}` });
-    setShowIssue(false);
+  const resetIssueForm = () => {
+    setIssueProgramId("");
+    setIssueFirstName("");
+    setIssueLastName("");
+    setIssueEmail("");
     setIssueStep(1);
   };
+
+  const handleIssueSubmit = () => {
+    const program = state.programs.find(p => p.id === issueProgramId);
+    dispatch({
+      type: "ISSUE_CERT",
+      payload: {
+        holderName: `${issueFirstName} ${issueLastName}`,
+        holderEmail: issueEmail,
+        programId: issueProgramId,
+        programName: program?.name ?? "",
+        identity: "verified",
+      },
+    });
+    toast.success(t("certificates.toastIssued"));
+    setShowIssue(false);
+    resetIssueForm();
+  };
+
+  const selectedProgram = state.programs.find(p => p.id === issueProgramId);
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="page-header flex items-start justify-between">
         <div>
-          <h1 className="page-title">Certificates</h1>
-          <p className="page-description">ค้นหาและจัดการใบรับรองทั้งหมด</p>
+          <h1 className="page-title">{t("certificates.title")}</h1>
+          <p className="page-description">{t("certificates.subtitle")}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => toast.success("Export started", { description: "กำลังส่งออกไฟล์ CSV..." })}><Download className="h-4 w-4 mr-2" />Export</Button>
-          <Button onClick={() => { setShowIssue(true); setIssueStep(1); }}><Plus className="h-4 w-4 mr-2" />Issue Certificate</Button>
+          <Button variant="outline" onClick={() => toast.success(t("certificates.toastExportTitle"), { description: t("certificates.toastExportDesc") })}>
+            <Download className="h-4 w-4 mr-2" />{t("common.export")}
+          </Button>
+          <Button onClick={() => { setShowIssue(true); resetIssueForm(); }}>
+            <Plus className="h-4 w-4 mr-2" />{t("certificates.issueCertificate")}
+          </Button>
         </div>
       </div>
 
       <div className="flex gap-2">
         <div className="relative flex-1 max-w-sm">
           <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="ค้นหาด้วย Cert No, ชื่อ..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+          <Input placeholder={t("certificates.searchPlaceholder")} className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
       </div>
 
@@ -62,20 +89,20 @@ export default function Certificates() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Cert No.</TableHead>
-              <TableHead>Holder</TableHead>
-              <TableHead>Program</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Issued</TableHead>
-              <TableHead>Expires</TableHead>
+              <TableHead>{t("certificates.certNo")}</TableHead>
+              <TableHead>{t("certificates.holder")}</TableHead>
+              <TableHead>{t("certificates.program")}</TableHead>
+              <TableHead>{t("certificates.status")}</TableHead>
+              <TableHead>{t("certificates.issued")}</TableHead>
+              <TableHead>{t("certificates.expires")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.map((cert) => (
               <TableRow key={cert.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedCert(cert)}>
                 <TableCell className="font-mono text-sm">{cert.certNo}</TableCell>
-                <TableCell className="font-medium">{cert.holder}</TableCell>
-                <TableCell className="text-muted-foreground">{cert.program}</TableCell>
+                <TableCell className="font-medium">{cert.holderName}</TableCell>
+                <TableCell className="text-muted-foreground">{cert.programName}</TableCell>
                 <TableCell><StatusBadge status={cert.status} /></TableCell>
                 <TableCell className="text-muted-foreground">{cert.issuedAt || "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{cert.expiresAt || "—"}</TableCell>
@@ -89,31 +116,33 @@ export default function Certificates() {
       <Sheet open={!!selectedCert && !showQR} onOpenChange={() => setSelectedCert(null)}>
         <SheetContent className="sm:max-w-lg overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Certificate Detail</SheetTitle>
+            <SheetTitle>{t("certificates.detail")}</SheetTitle>
             <SheetDescription>{selectedCert?.certNo}</SheetDescription>
           </SheetHeader>
           {selectedCert && (
             <div className="space-y-6 mt-6">
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><p className="text-xs text-muted-foreground">Holder</p><p className="font-medium">{selectedCert.holder}</p></div>
-                <div><p className="text-xs text-muted-foreground">Status</p><StatusBadge status={selectedCert.status} /></div>
-                <div><p className="text-xs text-muted-foreground">Program</p><p className="font-medium">{selectedCert.program}</p></div>
-                <div><p className="text-xs text-muted-foreground">Cert No.</p><p className="font-mono text-xs">{selectedCert.certNo}</p></div>
-                <div><p className="text-xs text-muted-foreground">Issued</p><p className="font-medium">{selectedCert.issuedAt || "—"}</p></div>
-                <div><p className="text-xs text-muted-foreground">Expires</p><p className="font-medium">{selectedCert.expiresAt || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">{t("certificates.holder")}</p><p className="font-medium">{selectedCert.holderName}</p></div>
+                <div><p className="text-xs text-muted-foreground">{t("certificates.status")}</p><StatusBadge status={selectedCert.status} /></div>
+                <div><p className="text-xs text-muted-foreground">{t("certificates.program")}</p><p className="font-medium">{selectedCert.programName}</p></div>
+                <div><p className="text-xs text-muted-foreground">{t("certificates.certNo")}</p><p className="font-mono text-xs">{selectedCert.certNo}</p></div>
+                <div><p className="text-xs text-muted-foreground">{t("certificates.issued")}</p><p className="font-medium">{selectedCert.issuedAt || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">{t("certificates.expires")}</p><p className="font-medium">{selectedCert.expiresAt || "—"}</p></div>
               </div>
 
               {/* Timeline */}
               <div>
-                <p className="text-sm font-semibold mb-3">Status Timeline</p>
+                <p className="text-sm font-semibold mb-3">{t("certificates.statusTimeline")}</p>
                 <div className="space-y-3">
-                  {timeline.map((t, i) => (
+                  {[
+                    { label: t("certificates.draftCreated"), done: true },
+                    { label: t("certificates.submittedForApproval"), done: selectedCert.status !== "pending" || !!selectedCert.issuedAt },
+                    { label: t("certificates.approved"), done: selectedCert.status === "active" },
+                    { label: t("certificates.certificateIssued"), done: selectedCert.status === "active" && !!selectedCert.issuedAt },
+                  ].map((step, i) => (
                     <div key={i} className="flex items-center gap-3">
-                      <div className={`h-3 w-3 rounded-full shrink-0 ${t.done ? "bg-success" : "bg-muted"}`} />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{t.label}</p>
-                        <p className="text-xs text-muted-foreground">{t.date}</p>
-                      </div>
+                      <div className={`h-3 w-3 rounded-full shrink-0 ${step.done ? "bg-success" : "bg-muted"}`} />
+                      <p className="text-sm font-medium">{step.label}</p>
                     </div>
                   ))}
                 </div>
@@ -122,18 +151,18 @@ export default function Certificates() {
               {/* Actions */}
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={() => setShowQR(true)}>
-                  <QrCode className="h-4 w-4 mr-1.5" />View QR
+                  <QrCodeIcon className="h-4 w-4 mr-1.5" />{t("certificates.viewQR")}
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => toast.success("Certificate PDF downloaded")}>
-                  <Download className="h-4 w-4 mr-1.5" />Download
+                <Button variant="outline" size="sm" onClick={() => toast.success(t("certificates.toastDownloaded"))}>
+                  <Download className="h-4 w-4 mr-1.5" />{t("common.download")}
                 </Button>
                 {selectedCert.status === "active" && (
                   <>
-                    <Button variant="outline" size="sm" onClick={() => { toast.success("ต่ออายุใบรับรองเรียบร้อย"); setSelectedCert(null); }}>
-                      <RotateCcw className="h-4 w-4 mr-1.5" />Extend
+                    <Button variant="outline" size="sm" onClick={() => { toast.success(t("certificates.toastExtended")); setSelectedCert(null); }}>
+                      <RotateCcw className="h-4 w-4 mr-1.5" />{t("certificates.extend")}
                     </Button>
-                    <Button variant="outline" size="sm" className="text-destructive" onClick={() => { toast.error("เพิกถอนใบรับรองเรียบร้อย"); setSelectedCert(null); }}>
-                      <Ban className="h-4 w-4 mr-1.5" />Revoke
+                    <Button variant="outline" size="sm" className="text-destructive" onClick={() => { toast.error(t("certificates.toastRevoked")); setSelectedCert(null); }}>
+                      <Ban className="h-4 w-4 mr-1.5" />{t("certificates.revoke")}
                     </Button>
                   </>
                 )}
@@ -147,41 +176,47 @@ export default function Certificates() {
       <Dialog open={showQR} onOpenChange={setShowQR}>
         <DialogContent className="sm:max-w-sm text-center">
           <DialogHeader>
-            <DialogTitle>QR Code</DialogTitle>
+            <DialogTitle>{t("certificates.qrCode")}</DialogTitle>
             <DialogDescription>{selectedCert?.certNo}</DialogDescription>
           </DialogHeader>
-          <div className="mx-auto my-4 h-48 w-48 border-2 border-dashed border-primary/30 rounded-xl flex flex-col items-center justify-center bg-muted/30">
-            <QrCode className="h-20 w-20 text-primary/60" />
-            <p className="text-[10px] text-muted-foreground mt-2 font-mono">/verify/{selectedCert?.certNo}</p>
-          </div>
-          <p className="text-xs text-muted-foreground">สแกน QR นี้เพื่อตรวจสอบใบรับรอง</p>
+          {selectedCert && <QRCodeDisplay certNo={selectedCert.certNo} />}
+          <p className="text-xs text-muted-foreground">{t("certificates.qrScanDesc")}</p>
         </DialogContent>
       </Dialog>
 
       {/* Issue Certificate Dialog */}
-      <Dialog open={showIssue} onOpenChange={() => { setShowIssue(false); setIssueStep(1); }}>
+      <Dialog open={showIssue} onOpenChange={() => { setShowIssue(false); resetIssueForm(); }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Issue Certificate</DialogTitle>
-            <DialogDescription>ขั้นตอนที่ {issueStep} จาก 3</DialogDescription>
+            <DialogTitle>{t("certificates.issueDialogTitle")}</DialogTitle>
+            <DialogDescription>{t("certificates.stepOf", { step: issueStep, total: 3 })}</DialogDescription>
           </DialogHeader>
 
           {issueStep === 1 && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Program</Label>
-                <Select defaultValue="1">
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Label>{t("certificates.program")}</Label>
+                <Select value={issueProgramId} onValueChange={setIssueProgramId}>
+                  <SelectTrigger><SelectValue placeholder={t("certificates.program")} /></SelectTrigger>
                   <SelectContent>
-                    {mockPrograms.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                    {state.programs.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>ชื่อ</Label><Input placeholder="ชื่อ" defaultValue="สมชาย" /></div>
-                <div className="space-y-2"><Label>นามสกุล</Label><Input placeholder="นามสกุล" defaultValue="ใจดี" /></div>
+                <div className="space-y-2">
+                  <Label>{t("certificates.firstName")}</Label>
+                  <Input placeholder={t("certificates.firstName")} value={issueFirstName} onChange={e => setIssueFirstName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("certificates.lastName")}</Label>
+                  <Input placeholder={t("certificates.lastName")} value={issueLastName} onChange={e => setIssueLastName(e.target.value)} />
+                </div>
               </div>
-              <div className="space-y-2"><Label>Email</Label><Input type="email" placeholder="email@example.com" defaultValue="somchai@gmail.com" /></div>
+              <div className="space-y-2">
+                <Label>{t("certificates.email")}</Label>
+                <Input type="email" placeholder="email@example.com" value={issueEmail} onChange={e => setIssueEmail(e.target.value)} />
+              </div>
             </div>
           )}
 
@@ -189,34 +224,36 @@ export default function Certificates() {
             <div className="space-y-4">
               <div className="rounded-lg border-2 border-dashed p-8 text-center text-muted-foreground">
                 <Shield className="h-10 w-10 mx-auto mb-3 text-primary/50" />
-                <p className="font-medium text-sm">Identity Verification</p>
-                <p className="text-xs mt-1">อัปโหลดสำเนาบัตรประชาชนหรือพาสปอร์ต</p>
-                <Button variant="outline" size="sm" className="mt-3" onClick={() => toast.info("Mock: เลือกไฟล์สำเร็จ")}>เลือกไฟล์</Button>
+                <p className="font-medium text-sm">{t("certificates.identityVerification")}</p>
+                <p className="text-xs mt-1">{t("certificates.uploadIdDoc")}</p>
+                <Button variant="outline" size="sm" className="mt-3" onClick={() => toast.info(t("certificates.toastFileSelected"))}>{t("certificates.chooseFile")}</Button>
               </div>
               <div className="rounded-lg bg-success/10 border border-success/30 p-3 text-sm text-success flex items-center gap-2">
-                <Clock className="h-4 w-4" /> สถานะ: รอการตรวจสอบ (Mock)
+                <Clock className="h-4 w-4" /> {t("certificates.verificationStatus")}
               </div>
             </div>
           )}
 
           {issueStep === 3 && (
             <div className="space-y-4">
-              <p className="text-sm font-semibold">ตรวจสอบข้อมูล</p>
+              <p className="text-sm font-semibold">{t("certificates.reviewInfo")}</p>
               <div className="rounded-lg bg-muted/50 p-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Program</span><span className="font-medium">EMT-Paramedic Certification</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Holder</span><span className="font-medium">สมชาย ใจดี</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span className="font-medium">somchai@gmail.com</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">ID Verification</span><span className="font-medium text-success">Uploaded</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("certificates.program")}</span><span className="font-medium">{selectedProgram?.name ?? "—"}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("certificates.holder")}</span><span className="font-medium">{issueFirstName} {issueLastName}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("certificates.email")}</span><span className="font-medium">{issueEmail}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("certificates.idVerification")}</span><span className="font-medium text-success">{t("certificates.uploaded")}</span></div>
               </div>
             </div>
           )}
 
           <DialogFooter>
-            {issueStep > 1 && <Button variant="outline" onClick={() => setIssueStep(s => s - 1)}>ย้อนกลับ</Button>}
+            {issueStep > 1 && <Button variant="outline" onClick={() => setIssueStep(s => s - 1)}>{t("common.back")}</Button>}
             {issueStep < 3 ? (
-              <Button onClick={() => setIssueStep(s => s + 1)}>ถัดไป</Button>
+              <Button onClick={() => setIssueStep(s => s + 1)} disabled={issueStep === 1 && (!issueProgramId || !issueFirstName || !issueLastName || !issueEmail)}>
+                {t("common.next")}
+              </Button>
             ) : (
-              <Button onClick={handleIssueSubmit}>ออกใบรับรอง</Button>
+              <Button onClick={handleIssueSubmit}>{t("certificates.issueCertificate")}</Button>
             )}
           </DialogFooter>
         </DialogContent>
