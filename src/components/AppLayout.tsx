@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "react-i18next";
 import { useAppStore } from "@/lib/store";
+import { RoleBadge } from "@/components/RoleBadge";
+import { ResetDemoButton } from "@/components/ResetDemoButton";
+import { DemoTourLauncher } from "@/components/DemoTourLauncher";
 
 export function AppLayout() {
   const { t, i18n } = useTranslation();
@@ -31,6 +34,8 @@ export function AppLayout() {
               <SidebarTrigger />
             </div>
             <div className="flex items-center gap-2">
+              <RoleBadge />
+              <ResetDemoButton />
               <Button
                 variant="ghost"
                 size="sm"
@@ -67,6 +72,7 @@ export function AppLayout() {
           <main className="flex-1 p-6 overflow-auto">
             <Outlet />
           </main>
+          <DemoTourLauncher />
         </div>
       </div>
     </SidebarProvider>

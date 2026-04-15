@@ -4,8 +4,10 @@ import { useAppStore } from "@/lib/store";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Download, Search, QrCode as QrCodeIcon, Shield, Clock, RotateCcw, Ban } from "lucide-react";
+import { Plus, Download, Search, QrCode as QrCodeIcon, Shield, Clock, RotateCcw, Ban, AlertCircle } from "lucide-react";
 import { QRCodeDisplay } from "@/components/QRCodeDisplay";
+import { downloadCertificatePdf } from "@/lib/certPdf";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -29,6 +31,8 @@ export default function Certificates() {
   const [issueFirstName, setIssueFirstName] = useState("");
   const [issueLastName, setIssueLastName] = useState("");
   const [issueEmail, setIssueEmail] = useState("");
+  const [issueIdentity, setIssueIdentity] = useState<"verified" | "pending">("verified");
+  const [issueIdMethod, setIssueIdMethod] = useState("national-id");
 
   const filtered = state.certificates.filter(c =>
     !search || c.certNo.toLowerCase().includes(search.toLowerCase()) || c.holderName.toLowerCase().includes(search.toLowerCase())
@@ -39,6 +43,8 @@ export default function Certificates() {
     setIssueFirstName("");
     setIssueLastName("");
     setIssueEmail("");
+    setIssueIdentity("verified");
+    setIssueIdMethod("national-id");
     setIssueStep(1);
   };
 
@@ -51,12 +57,23 @@ export default function Certificates() {
         holderEmail: issueEmail,
         programId: issueProgramId,
         programName: program?.name ?? "",
-        identity: "verified",
+        identity: issueIdentity,
       },
     });
     toast.success(t("certificates.toastIssued"));
     setShowIssue(false);
     resetIssueForm();
+  };
+
+  const handleDownloadCert = async (cert: Certificate) => {
+    const program = state.programs.find(p => p.id === cert.programId);
+    toast.info(t("portal.preparingPdf"));
+    try {
+      await downloadCertificatePdf(cert, program);
+      toast.success(t("portal.toastDownloaded"));
+    } catch {
+      toast.error(t("portal.downloadError"));
+    }
   };
 
   const selectedProgram = state.programs.find(p => p.id === issueProgramId);
@@ -153,7 +170,7 @@ export default function Certificates() {
                 <Button variant="outline" size="sm" onClick={() => setShowQR(true)}>
                   <QrCodeIcon className="h-4 w-4 mr-1.5" />{t("certificates.viewQR")}
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => toast.success(t("certificates.toastDownloaded"))}>
+                <Button variant="outline" size="sm" onClick={() => selectedCert && handleDownloadCert(selectedCert)}>
                   <Download className="h-4 w-4 mr-1.5" />{t("common.download")}
                 </Button>
                 {selectedCert.status === "active" && (
@@ -222,15 +239,51 @@ export default function Certificates() {
 
           {issueStep === 2 && (
             <div className="space-y-4">
-              <div className="rounded-lg border-2 border-dashed p-8 text-center text-muted-foreground">
-                <Shield className="h-10 w-10 mx-auto mb-3 text-primary/50" />
-                <p className="font-medium text-sm">{t("certificates.identityVerification")}</p>
-                <p className="text-xs mt-1">{t("certificates.uploadIdDoc")}</p>
-                <Button variant="outline" size="sm" className="mt-3" onClick={() => toast.info(t("certificates.toastFileSelected"))}>{t("certificates.chooseFile")}</Button>
+              <div>
+                <Label className="text-sm font-semibold flex items-center gap-2 mb-3">
+                  <Shield className="h-4 w-4 text-primary" /> {t("certificates.identityVerification")}
+                </Label>
+                <RadioGroup value={issueIdentity} onValueChange={(v) => setIssueIdentity(v as "verified" | "pending")} className="space-y-2">
+                  <label className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50">
+                    <RadioGroupItem value="verified" id="id-verified" className="mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">{t("certificates.idVerified")}</p>
+                      <p className="text-xs text-muted-foreground">{t("certificates.idVerifiedDesc")}</p>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50">
+                    <RadioGroupItem value="pending" id="id-pending" className="mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">{t("certificates.idPendingLabel")}</p>
+                      <p className="text-xs text-muted-foreground">{t("certificates.idPendingDesc")}</p>
+                    </div>
+                  </label>
+                </RadioGroup>
               </div>
-              <div className="rounded-lg bg-success/10 border border-success/30 p-3 text-sm text-success flex items-center gap-2">
-                <Clock className="h-4 w-4" /> {t("certificates.verificationStatus")}
-              </div>
+
+              {issueIdentity === "verified" && (
+                <div className="space-y-2">
+                  <Label className="text-xs">{t("certificates.verificationMethod")}</Label>
+                  <Select value={issueIdMethod} onValueChange={setIssueIdMethod}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="national-id">{t("certificates.methodNationalId")}</SelectItem>
+                      <SelectItem value="passport">{t("certificates.methodPassport")}</SelectItem>
+                      <SelectItem value="employer">{t("certificates.methodEmployer")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="rounded-lg bg-success/10 border border-success/30 p-3 text-xs text-success flex items-center gap-2">
+                    <Clock className="h-4 w-4" /> {t("certificates.verificationStatus")}
+                  </div>
+                </div>
+              )}
+
+              {issueIdentity === "pending" && (
+                <div className="rounded-lg bg-warning/10 border border-warning/30 p-3 text-xs text-warning-foreground flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 text-warning" />
+                  <span>{t("certificates.identityPendingNotice")}</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -241,7 +294,11 @@ export default function Certificates() {
                 <div className="flex justify-between"><span className="text-muted-foreground">{t("certificates.program")}</span><span className="font-medium">{selectedProgram?.name ?? "—"}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">{t("certificates.holder")}</span><span className="font-medium">{issueFirstName} {issueLastName}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">{t("certificates.email")}</span><span className="font-medium">{issueEmail}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">{t("certificates.idVerification")}</span><span className="font-medium text-success">{t("certificates.uploaded")}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("certificates.idVerification")}</span>
+                  <span className={`font-medium ${issueIdentity === "verified" ? "text-success" : "text-warning"}`}>
+                    {issueIdentity === "verified" ? t("certificates.idVerified") : t("certificates.idPendingLabel")}
+                  </span>
+                </div>
               </div>
             </div>
           )}

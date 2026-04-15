@@ -1,12 +1,34 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { mockApiClients } from "@/lib/mockData";
+import { useAppStore } from "@/lib/store";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Plus, Key, Copy, BarChart3 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export default function ApiClients() {
   const { t } = useTranslation();
+  const { state, dispatch } = useAppStore();
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [name, setName] = useState("");
+
+  const handleCreate = () => {
+    if (!name.trim()) return;
+    dispatch({ type: "CREATE_API_CLIENT", payload: { name: name.trim() } });
+    toast.success(t("apiClients.createdToast", { name }));
+    setCreateOpen(false);
+    setName("");
+  };
+
+  const copyKey = (key: string) => {
+    navigator.clipboard?.writeText(key).catch(() => {});
+    toast.success(t("apiClients.keyCopied"));
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -15,11 +37,11 @@ export default function ApiClients() {
           <h1 className="page-title">{t("apiClients.title")}</h1>
           <p className="page-description">{t("apiClients.subtitle")}</p>
         </div>
-        <Button><Plus className="h-4 w-4 mr-2" />{t("apiClients.createClient")}</Button>
+        <Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-2" />{t("apiClients.createClient")}</Button>
       </div>
 
       <div className="space-y-4">
-        {mockApiClients.map((client) => (
+        {state.apiClients.map((client) => (
           <Card key={client.id}>
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
@@ -34,7 +56,7 @@ export default function ApiClients() {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <code className="bg-muted px-2 py-0.5 rounded text-xs font-mono">{client.apiKey}</code>
-                      <Button variant="ghost" size="icon" className="h-6 w-6"><Copy className="h-3 w-3" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyKey(client.apiKey)}><Copy className="h-3 w-3" /></Button>
                     </div>
                     <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
                       <span>{t("apiClients.created")} {client.created}</span>
@@ -65,6 +87,24 @@ export default function ApiClients() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Create Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("apiClients.createClient")}</DialogTitle>
+            <DialogDescription>{t("apiClients.createDesc")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5"><Label>{t("apiClients.clientName")}</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="My Hospital Verify Widget" /></div>
+            <p className="text-xs text-muted-foreground">{t("apiClients.keyHint")}</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>{t("common.cancel")}</Button>
+            <Button onClick={handleCreate} disabled={!name.trim()}>{t("common.create")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

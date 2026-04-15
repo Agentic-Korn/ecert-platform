@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Shield, CheckCircle2, XCircle, AlertTriangle, Award, Calendar, Building2, Search, Clock, Globe } from "lucide-react";
+import { Shield, CheckCircle2, XCircle, AlertTriangle, Award, Calendar, Building2, Search, Clock, Globe, Camera } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAppStore } from "@/lib/store";
 import type { Certificate } from "@/lib/types";
+import { QrScanner } from "@/components/QrScanner";
+import { DemoTourLauncher } from "@/components/DemoTourLauncher";
 
 function maskName(name: string): string {
   const parts = name.split(" ");
@@ -23,6 +25,16 @@ export default function VerifyPublic() {
   const [queriedCertNo, setQueriedCertNo] = useState(paramCertNo || "");
   const [result, setResult] = useState<Certificate | null>(null);
   const [searched, setSearched] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+
+  const handleScanResult = (text: string) => {
+    setScannerOpen(false);
+    // QR may contain a verify URL; extract the cert number
+    const match = text.match(/\/verify\/([^/?#]+)/);
+    const certNo = match ? decodeURIComponent(match[1]) : text;
+    setSearchInput(certNo);
+    doSearch(certNo);
+  };
 
   const toggleLanguage = () => {
     i18n.changeLanguage(i18n.language === "th" ? "en" : "th");
@@ -104,18 +116,29 @@ export default function VerifyPublic() {
         </div>
 
         {/* Search */}
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder={t("verify.searchPlaceholder")}
-              className="pl-9"
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleSearch()}
-            />
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={t("verify.searchPlaceholder")}
+                className="pl-9"
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSearch()}
+              />
+            </div>
+            <Button onClick={handleSearch}>{t("verify.verifyButton")}</Button>
           </div>
-          <Button onClick={handleSearch}>{t("verify.verifyButton")}</Button>
+          <Button
+            variant="outline"
+            className="w-full gap-2"
+            onClick={() => setScannerOpen(true)}
+            data-tour="scan-qr"
+          >
+            <Camera className="h-4 w-4" />
+            {t("verify.scanQr")}
+          </Button>
         </div>
 
         {/* Result — Found */}
@@ -155,6 +178,13 @@ export default function VerifyPublic() {
           {t("verify.footer")} · {new Date().toISOString().split("T")[0]}
         </p>
       </div>
+
+      <QrScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onResult={handleScanResult}
+      />
+      <DemoTourLauncher />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import type {
   AuditEntry,
   Program,
 } from "./types";
+import type { ApiClient } from "./types";
 import {
   mockCertificates,
   mockApprovals,
@@ -19,6 +20,7 @@ import {
   mockPrograms,
   mockEnrollmentsSeed,
   mockVerifyLogsSeed,
+  mockApiClients,
 } from "./mockData";
 
 // --- Utility ---
@@ -53,6 +55,7 @@ export interface AppState {
   courses: Course[];
   enrollments: Enrollment[];
   users: User[];
+  apiClients: ApiClient[];
   currentUser: AuthSession | null;
   verifyLogs: VerifyLog[];
   auditLog: AuditEntry[];
@@ -116,25 +119,30 @@ const seedAuditLog: AuditEntry[] = mockLogs.map((l) => ({
   ip: l.ip,
 }));
 
-export const initialState: AppState = {
-  programs: mockPrograms as Program[],
-  certificates: seedCertificates,
-  approvals: seedApprovals,
-  courses: seedCourses,
-  enrollments: mockEnrollmentsSeed.map((e) => ({
-    id: e.id,
-    courseId: e.courseId,
-    holderId: e.id,
-    holderName: e.holderName,
-    holderEmail: e.holderEmail,
-    enrolledAt: e.enrolledAt,
-    attended: e.attended,
-  })),
-  users: seedUsers,
-  currentUser: null,
-  verifyLogs: mockVerifyLogsSeed,
-  auditLog: seedAuditLog,
-};
+function buildInitialState(): AppState {
+  return {
+    programs: mockPrograms.map((p) => ({ ...p })) as Program[],
+    certificates: seedCertificates.map((c) => ({ ...c })),
+    approvals: seedApprovals.map((a) => ({ ...a })),
+    courses: seedCourses.map((c) => ({ ...c })),
+    enrollments: mockEnrollmentsSeed.map((e) => ({
+      id: e.id,
+      courseId: e.courseId,
+      holderId: e.id,
+      holderName: e.holderName,
+      holderEmail: e.holderEmail,
+      enrolledAt: e.enrolledAt,
+      attended: e.attended,
+    })),
+    users: seedUsers.map((u) => ({ ...u })),
+    apiClients: mockApiClients.map((c) => ({ ...c })),
+    currentUser: null,
+    verifyLogs: mockVerifyLogsSeed.map((l) => ({ ...l })),
+    auditLog: seedAuditLog.map((a) => ({ ...a })),
+  };
+}
+
+export const initialState: AppState = buildInitialState();
 
 // --- Actions ---
 export type AppAction =
@@ -148,7 +156,15 @@ export type AppAction =
   | { type: "MARK_ATTENDANCE"; payload: { enrollmentId: string } }
   | { type: "COMPLETE_COURSE"; payload: { courseId: string } }
   | { type: "LOG_VERIFY"; payload: { certNo: string } }
-  | { type: "SET_LANGUAGE"; payload: string };
+  | { type: "SET_LANGUAGE"; payload: string }
+  | { type: "BULK_APPROVE"; payload: { approvalIds: string[]; reviewedBy: string } }
+  | { type: "BULK_REJECT"; payload: { approvalIds: string[]; reviewedBy: string; reason: string } }
+  | { type: "ATTACH_DOC"; payload: { approvalId: string; filename: string } }
+  | { type: "RESET_DEMO" }
+  | { type: "CREATE_PROGRAM"; payload: { name: string; code: string; issuer: string; duration: string; template: string } }
+  | { type: "CREATE_COURSE"; payload: { name: string; programId: string; capacity: number; sessions: number; startDate: string } }
+  | { type: "CREATE_USER"; payload: { name: string; email: string; role: "admin" | "approver" | "trainer" | "holder" } }
+  | { type: "CREATE_API_CLIENT"; payload: { name: string } };
 
 // --- Reducer ---
 export function appReducer(state: AppState, action: AppAction): AppState {
@@ -368,6 +384,122 @@ export function appReducer(state: AppState, action: AppAction): AppState {
 
     case "SET_LANGUAGE":
       return state; // Language is handled by i18next, not store state
+
+    case "BULK_APPROVE": {
+      const { approvalIds, reviewedBy } = action.payload;
+      let workingState = state;
+      for (const id of approvalIds) {
+        workingState = appReducer(workingState, { type: "APPROVE_REQUEST", payload: { approvalId: id, reviewedBy } });
+      }
+      return {
+        ...workingState,
+        auditLog: addAudit(workingState, "Bulk Approval", `${approvalIds.length} requests`),
+      };
+    }
+
+    case "BULK_REJECT": {
+      const { approvalIds, reviewedBy, reason } = action.payload;
+      let workingState = state;
+      for (const id of approvalIds) {
+        workingState = appReducer(workingState, { type: "REJECT_REQUEST", payload: { approvalId: id, reviewedBy, reason } });
+      }
+      return {
+        ...workingState,
+        auditLog: addAudit(workingState, "Bulk Rejection", `${approvalIds.length} requests`),
+      };
+    }
+
+    case "ATTACH_DOC": {
+      const { approvalId, filename } = action.payload;
+      return {
+        ...state,
+        approvals: state.approvals.map((a) =>
+          a.id === approvalId ? { ...a, attachedDoc: filename, identity: "verified" as const } : a
+        ),
+        auditLog: addAudit(state, "Document Attached", `${approvalId} → ${filename}`),
+      };
+    }
+
+    case "RESET_DEMO": {
+      const fresh = buildInitialState();
+      // Preserve current login session through reset
+      return { ...fresh, currentUser: state.currentUser };
+    }
+
+    case "CREATE_PROGRAM": {
+      const { name, code, issuer, duration, template } = action.payload;
+      const newProgram: Program = {
+        id: genId(),
+        name,
+        code,
+        issuer,
+        duration,
+        activeCerts: 0,
+        template,
+      };
+      return {
+        ...state,
+        programs: [...state.programs, newProgram],
+        auditLog: addAudit(state, "Program Created", `${name} (${code})`),
+      };
+    }
+
+    case "CREATE_COURSE": {
+      const { name, programId, capacity, sessions, startDate } = action.payload;
+      const program = state.programs.find((p) => p.id === programId);
+      const newCourse: Course = {
+        id: genId(),
+        name,
+        programId,
+        programName: program?.name ?? "",
+        sessions,
+        enrolled: 0,
+        capacity,
+        status: "open",
+        startDate,
+      };
+      return {
+        ...state,
+        courses: [...state.courses, newCourse],
+        auditLog: addAudit(state, "Course Created", name),
+      };
+    }
+
+    case "CREATE_USER": {
+      const { name, email, role } = action.payload;
+      const newUser: User = {
+        id: genId(),
+        name,
+        email,
+        role,
+        status: "active",
+        lastLogin: "—",
+      };
+      return {
+        ...state,
+        users: [...state.users, newUser],
+        auditLog: addAudit(state, "User Created", `${name} (${role})`),
+      };
+    }
+
+    case "CREATE_API_CLIENT": {
+      const { name } = action.payload;
+      const key = "eCrt_demo_" + Math.random().toString(36).substring(2, 14);
+      const newClient: ApiClient = {
+        id: genId(),
+        name,
+        apiKey: key,
+        created: now,
+        lastUsed: "—",
+        requests: 0,
+        status: "active",
+      };
+      return {
+        ...state,
+        apiClients: [...state.apiClients, newClient],
+        auditLog: addAudit(state, "API Key Issued", name),
+      };
+    }
 
     default:
       return state;
