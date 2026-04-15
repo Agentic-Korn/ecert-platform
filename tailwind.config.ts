@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Noto Sans Thai", "Noto Sans", "system-ui", "sans-serif"],
-        display: ["Noto Sans", "Noto Sans Thai", "system-ui", "sans-serif"],
+        sans: ['"IBM Plex Sans Thai Looped"', "Inter", "system-ui", "sans-serif"],
+        display: ['"IBM Plex Sans Thai"', "Inter", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

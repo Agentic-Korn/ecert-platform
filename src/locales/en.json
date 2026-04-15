@@ -99,7 +99,9 @@
     "renewalRulesDesc": "Auto-notify 30 days before expiry · Requires re-training if expired > 6 months · Approver review required",
     "activeCertificates": "Active Certificates:",
     "toastCreate": "Create new Program (Demo)",
-    "toastSaved": "Program saved successfully"
+    "toastSaved": "Program saved successfully",
+    "createDesc": "Define a new certification program available for issuance.",
+    "createdToast": "Program \"{{name}}\" created"
   },
   "certificates": {
     "title": "Certificates",
@@ -143,7 +145,16 @@
     "toastRevoked": "Certificate revoked successfully",
     "toastFileSelected": "Mock: File selected successfully",
     "verifyHistory": "Verify History",
-    "noVerifications": "No verifications yet"
+    "noVerifications": "No verifications yet",
+    "idVerified": "Verified",
+    "idVerifiedDesc": "Identity has been confirmed via supporting documents.",
+    "idPendingLabel": "Pending verification",
+    "idPendingDesc": "Approver will manually verify identity before approval.",
+    "verificationMethod": "Verification Method",
+    "methodNationalId": "National ID",
+    "methodPassport": "Passport",
+    "methodEmployer": "Employer Letter",
+    "identityPendingNotice": "Approval will require manual identity check."
   },
   "approvals": {
     "title": "Approval Inbox",
@@ -170,7 +181,18 @@
     "toastApproved": "Certificate for {{holder}} approved successfully",
     "toastRejected": "Request from {{holder}} rejected",
     "noReason": "No reason given",
-    "toastFiltered": "Filter applied"
+    "toastFiltered": "Filter applied",
+    "nSelected": "{{count}} selected",
+    "selectToBulk": "Select items to bulk approve or reject",
+    "approveN": "Approve {{count}}",
+    "rejectN": "Reject {{count}}",
+    "bulkApprovedToast": "Approved {{count}} requests",
+    "bulkRejectedToast": "Rejected {{count}} requests",
+    "bulkRejectTitle": "Reject {{count}} requests",
+    "bulkRejectDesc": "Provide a shared reason that will be recorded on each request.",
+    "sharedReason": "Shared reason *",
+    "attachDemoDoc": "Attach demo ID document",
+    "docAttachedToast": "Attached {{filename}}"
   },
   "training": {
     "title": "Training Courses",
@@ -192,7 +214,12 @@
     "attended": "Attended",
     "notAttended": "Not Attended",
     "enrollmentList": "Enrollment List",
-    "noEnrollments": "No students enrolled yet"
+    "noEnrollments": "No students enrolled yet",
+    "createDesc": "Schedule a new training course for a certification program.",
+    "createdToast": "Course \"{{name}}\" created",
+    "courseName": "Course Name",
+    "capacity": "Capacity",
+    "sessionsLabel": "Sessions"
   },
   "events": {
     "title": "Events",
@@ -250,7 +277,9 @@
     "email": "Email",
     "role": "Role",
     "status": "Status",
-    "lastLogin": "Last Login"
+    "lastLogin": "Last Login",
+    "createDesc": "Invite a new user and assign their role.",
+    "createdToast": "User \"{{name}}\" added"
   },
   "apiClients": {
     "title": "API Clients & Keys",
@@ -259,7 +288,12 @@
     "created": "Created:",
     "lastUsed": "Last used:",
     "requests": "{{count}} requests",
-    "apiDocumentation": "API Documentation"
+    "apiDocumentation": "API Documentation",
+    "createDesc": "Generate a new API key for the Verify API.",
+    "createdToast": "API client \"{{name}}\" created",
+    "clientName": "Client Name",
+    "keyHint": "An API key will be generated automatically and shown once.",
+    "keyCopied": "API key copied to clipboard"
   },
   "auditLogs": {
     "title": "Audit Logs",
@@ -314,7 +348,9 @@
     "notifExpiringSoonMsg": "Your AFR certificate expires in 30 days.",
     "timeAgo2h": "2 hours ago",
     "timeAgo1d": "1 day ago",
-    "timeAgo3d": "3 days ago"
+    "timeAgo3d": "3 days ago",
+    "preparingPdf": "Preparing PDF...",
+    "downloadError": "Failed to download certificate"
   },
   "verify": {
     "title": "Certificate Verification",
@@ -334,7 +370,10 @@
     "notFound": "Certificate not found",
     "notFoundDesc": "No data found for number \"{{certNo}}\"",
     "notFoundHint": "Try checking the certificate number again",
-    "footer": "Verified by eCert Platform"
+    "footer": "Verified by eCert Platform",
+    "scanQr": "Scan QR",
+    "scanQrDesc": "Point your camera at a certificate QR code.",
+    "scanError": "Could not read QR code. Try entering the certificate number manually."
   },
   "notFound": {
     "title": "404",
@@ -344,5 +383,63 @@
   "language": {
     "th": "ไทย",
     "en": "English"
+  },
+  "demo": {
+    "startTour": "Start Demo Tour",
+    "chooseJourney": "Choose a journey",
+    "chooseJourneyDesc": "Each journey switches you to the right role and walks through a crucial flow.",
+    "reset": "Reset Demo",
+    "resetToast": "Demo state reset",
+    "resetConfirmTitle": "Reset demo to initial state?",
+    "resetConfirmDesc": "All in-flight approvals, enrollments, and edits will be replaced with the seeded demo data. You will stay logged in.",
+    "journey": {
+      "admin": { "title": "Admin: Issue a Certificate", "desc": "Dashboard → issue cert with identity step → submit for approval" },
+      "approver": { "title": "Approver: Review & Approve", "desc": "Inbox → bulk approve → audit log entry" },
+      "trainer": { "title": "Trainer: Run a Training Course", "desc": "Open course → enroll → mark attendance → complete" },
+      "holder": { "title": "Holder: View, Download, Renew", "desc": "Portal → view cert → download PDF → request renewal" },
+      "verify": { "title": "Public: Verify by QR", "desc": "Verify page → scan QR with camera → see result" }
+    }
+  },
+  "tour": {
+    "admin": {
+      "title": "Admin Journey",
+      "s1": "You are signed in as an Admin. Admins manage programs, issue certificates, and oversee the platform.",
+      "s2t": "Issue a Certificate",
+      "s2": "Open Certificates from the sidebar to issue a new certificate. The form has 3 steps: holder info, identity verification, and review.",
+      "s3t": "Hand off to Approver",
+      "s3": "Once submitted, the request appears in the Approver's inbox. Run the Approver journey next."
+    },
+    "approver": {
+      "title": "Approver Journey",
+      "s1": "You are signed in as an Approver. Approvers review pending requests and decide approve or reject.",
+      "s2t": "Bulk Actions",
+      "s2": "Use the checkboxes to select multiple pending requests, then approve or reject them in one go.",
+      "s3t": "Audit Trail",
+      "s3": "Every decision is recorded in the Audit Logs. Run the Trainer journey to see training-driven issuance."
+    },
+    "trainer": {
+      "title": "Trainer Journey",
+      "s1": "You are signed in as a Trainer. Trainers manage courses, enroll students, and mark attendance.",
+      "s2t": "Course Lifecycle",
+      "s2": "Open any course to enroll students, mark attendance, and complete the course. Completion creates approval requests for all attended students.",
+      "s3t": "Bulk Approval",
+      "s3": "Switch to the Approver journey to bulk-approve the new requests."
+    },
+    "holder": {
+      "title": "Holder Journey",
+      "s1": "You are signed in as a Certificate Holder. The portal shows your certificates, QR codes, and notifications.",
+      "s2t": "Download PDF",
+      "s2": "Click Download on any active certificate to generate a printable PDF with embedded QR.",
+      "s3t": "Request Renewal",
+      "s3": "Use Request Renewal to submit a renewal request — it will appear in the Approver's inbox."
+    },
+    "verify": {
+      "title": "Public Verify",
+      "s1": "Anyone can verify a certificate without logging in. No personal data is exposed beyond what's needed to confirm validity.",
+      "s2t": "Scan QR",
+      "s2": "Click Scan QR to open your camera and scan a certificate QR code. You can also enter the certificate number manually.",
+      "s3t": "Try Different States",
+      "s3": "Try entering an expired or revoked certificate number to see how the verify page handles each state."
+    }
   }
 }

@@ -36,6 +36,7 @@ export interface ApprovalRequest {
   reviewedBy?: string;
   reason?: string;
   identity: IdentityStatus;
+  attachedDoc?: string;
 }
 
 export interface Program {

@@ -12,6 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { downloadCertificatePdf } from "@/lib/certPdf";
+import { RoleBadge } from "@/components/RoleBadge";
+import { ResetDemoButton } from "@/components/ResetDemoButton";
+import { DemoTourLauncher } from "@/components/DemoTourLauncher";
 
 export default function HolderPortal() {
   const { t, i18n } = useTranslation();
@@ -56,11 +60,83 @@ export default function HolderPortal() {
     setRenewReason("");
   };
 
-  const notifications = [
-    { id: "1", title: t("portal.notifCertApproved"), message: t("portal.notifCertApprovedMsg"), time: t("portal.timeAgo2h"), read: false },
-    { id: "2", title: t("portal.notifTrainingReminder"), message: t("portal.notifTrainingReminderMsg"), time: t("portal.timeAgo1d"), read: true },
-    { id: "3", title: t("portal.notifExpiringSoon"), message: t("portal.notifExpiringSoonMsg"), time: t("portal.timeAgo3d"), read: true },
-  ];
+  // State-driven notifications: derived from this holder's certs + approvals + enrollments
+  const today = new Date("2026-04-15");
+  const myEmail = state.currentUser?.email;
+  const notifications = (() => {
+    const items: { id: string; title: string; message: string; time: string; read: boolean }[] = [];
+
+    // Recent approvals on this holder's certs
+    state.approvals
+      .filter((a) => a.holderName === state.currentUser?.name && a.status === "approved")
+      .slice(-3)
+      .forEach((a) => {
+        items.push({
+          id: `appr-${a.id}`,
+          title: t("portal.notifCertApproved"),
+          message: `${a.programName} · ${a.certNo}`,
+          time: a.reviewedAt ?? a.submittedAt,
+          read: false,
+        });
+      });
+
+    // Expiring within 30 days
+    myCerts
+      .filter((c) => {
+        if (!c.expiresAt) return false;
+        const exp = new Date(c.expiresAt);
+        const diffDays = (exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+        return c.status === "active" && diffDays > 0 && diffDays <= 30;
+      })
+      .forEach((c) => {
+        items.push({
+          id: `exp-${c.id}`,
+          title: t("portal.notifExpiringSoon"),
+          message: `${c.programName} · ${c.certNo}`,
+          time: c.expiresAt,
+          read: false,
+        });
+      });
+
+    // Course enrollments
+    state.enrollments
+      .filter((e) => e.holderEmail === myEmail)
+      .slice(-2)
+      .forEach((e) => {
+        const course = state.courses.find((c) => c.id === e.courseId);
+        items.push({
+          id: `enr-${e.id}`,
+          title: t("portal.notifTrainingReminder"),
+          message: course?.name ?? "—",
+          time: e.enrolledAt,
+          read: true,
+        });
+      });
+
+    if (items.length === 0) {
+      items.push({
+        id: "default",
+        title: t("portal.notifCertApproved"),
+        message: t("portal.notifCertApprovedMsg"),
+        time: t("portal.timeAgo2h"),
+        read: true,
+      });
+    }
+    return items.sort((a, b) => (b.time > a.time ? 1 : -1));
+  })();
+
+  const handleDownload = async (certNo: string) => {
+    const cert = state.certificates.find((c) => c.certNo === certNo);
+    if (!cert) return;
+    const program = state.programs.find((p) => p.id === cert.programId);
+    toast.info(t("portal.preparingPdf"));
+    try {
+      await downloadCertificatePdf(cert, program);
+      toast.success(t("portal.toastDownloaded"));
+    } catch (e) {
+      toast.error(t("portal.downloadError"));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,6 +152,8 @@ export default function HolderPortal() {
             </div>
           </div>
           <div className="flex items-center gap-1">
+            <RoleBadge />
+            <ResetDemoButton compact />
             <Button
               variant="ghost"
               size="sm"
@@ -128,7 +206,7 @@ export default function HolderPortal() {
                         <Button variant="outline" size="sm" onClick={() => setQrCert(cert.certNo)}>
                           <QrCodeIcon className="h-4 w-4 mr-1.5" />{t("portal.qrCode")}
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => toast.success(t("portal.toastDownloaded"))}>
+                        <Button variant="outline" size="sm" onClick={() => handleDownload(cert.certNo)}>
                           <Download className="h-4 w-4 mr-1.5" />{t("common.download")}
                         </Button>
                         {(cert.status === "expired" || cert.status === "active") && (
@@ -196,6 +274,8 @@ export default function HolderPortal() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DemoTourLauncher />
     </div>
   );
 }

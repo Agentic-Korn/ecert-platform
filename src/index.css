@@ -2,7 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700;800&display=swap');
+/* Fonts loaded via <link> in index.html (preconnect for faster paint):
+   - IBM Plex Sans Thai Looped (body) — modern looped Thai standard, used by KBank/SCB/GovTech
+   - IBM Plex Sans Thai (display)     — slightly architectural, for headings
+   - Inter (Latin + numerals)         — pairs cleanly with both, supports tabular nums */
 
 @layer base {
   :root {
@@ -103,11 +106,16 @@
   }
   body {
     @apply text-foreground;
-    font-family: 'Noto Sans Thai', 'Noto Sans', system-ui, sans-serif;
-    background: linear-gradient(135deg, 
-      hsl(210 80% 94%) 0%, 
-      hsl(195 70% 92%) 30%, 
-      hsl(180 50% 93%) 60%, 
+    font-family: 'IBM Plex Sans Thai Looped', 'Inter', system-ui, sans-serif;
+    font-feature-settings: "tnum" 1, "ss01" 1;
+    line-height: 1.65;
+    letter-spacing: 0.005em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(135deg,
+      hsl(210 80% 94%) 0%,
+      hsl(195 70% 92%) 30%,
+      hsl(180 50% 93%) 60%,
       hsl(210 60% 95%) 100%
     );
     min-height: 100vh;
@@ -121,8 +129,20 @@
     );
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Noto Sans', 'Noto Sans Thai', system-ui, sans-serif;
+    font-family: 'IBM Plex Sans Thai', 'Inter', system-ui, sans-serif;
+    line-height: 1.35;
+    letter-spacing: -0.005em;
     @apply tracking-tight;
+  }
+}
+
+@layer utilities {
+  .font-thai-display {
+    font-family: 'IBM Plex Sans Thai', 'Inter', system-ui, sans-serif;
+  }
+  .tabular-nums-strict {
+    font-feature-settings: "tnum" 1;
+    font-variant-numeric: tabular-nums;
   }
 }
 

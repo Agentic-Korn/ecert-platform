@@ -13,6 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import type { Course } from "@/lib/types";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Training() {
   const { t } = useTranslation();
@@ -21,6 +23,25 @@ export default function Training() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [enrollName, setEnrollName] = useState("");
   const [enrollEmail, setEnrollEmail] = useState("");
+
+  // Create course form
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newProgramId, setNewProgramId] = useState("");
+  const [newCapacity, setNewCapacity] = useState(30);
+  const [newSessions, setNewSessions] = useState(2);
+  const [newStartDate, setNewStartDate] = useState("2026-06-01");
+
+  const handleCreateCourse = () => {
+    if (!newName.trim() || !newProgramId) return;
+    dispatch({
+      type: "CREATE_COURSE",
+      payload: { name: newName.trim(), programId: newProgramId, capacity: newCapacity, sessions: newSessions, startDate: newStartDate },
+    });
+    toast.success(t("training.createdToast", { name: newName }));
+    setCreateOpen(false);
+    setNewName(""); setNewProgramId(""); setNewCapacity(30); setNewSessions(2); setNewStartDate("2026-06-01");
+  };
 
   const handleEnroll = () => {
     if (!selectedCourse || !enrollName.trim() || !enrollEmail.trim()) return;
@@ -58,7 +79,7 @@ export default function Training() {
           <h1 className="page-title">{t("training.title")}</h1>
           <p className="page-description">{t("training.subtitle")}</p>
         </div>
-        <Button onClick={() => toast.info(t("training.toastCreate"))}><Plus className="h-4 w-4 mr-2" />{t("training.createCourse")}</Button>
+        <Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-2" />{t("training.createCourse")}</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -218,6 +239,37 @@ export default function Training() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Create Course Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("training.createCourse")}</DialogTitle>
+            <DialogDescription>{t("training.createDesc")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5"><Label>{t("training.courseName")}</Label><Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="EMT-Basic Summer 2026" /></div>
+            <div className="space-y-1.5">
+              <Label>{t("certificates.program")}</Label>
+              <Select value={newProgramId} onValueChange={setNewProgramId}>
+                <SelectTrigger><SelectValue placeholder={t("certificates.program")} /></SelectTrigger>
+                <SelectContent>
+                  {state.programs.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5"><Label>{t("training.capacity")}</Label><Input type="number" value={newCapacity} onChange={e => setNewCapacity(parseInt(e.target.value || "0"))} /></div>
+              <div className="space-y-1.5"><Label>{t("training.sessionsLabel")}</Label><Input type="number" value={newSessions} onChange={e => setNewSessions(parseInt(e.target.value || "0"))} /></div>
+              <div className="space-y-1.5"><Label>{t("events.date")}</Label><Input type="date" value={newStartDate} onChange={e => setNewStartDate(e.target.value)} /></div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>{t("common.cancel")}</Button>
+            <Button onClick={handleCreateCourse} disabled={!newName.trim() || !newProgramId}>{t("common.create")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
